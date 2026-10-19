@@ -1,0 +1,15 @@
+/var/log/nginx/africair.access.json /var/log/nginx/africair.error.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    sharedscripts
+    postrotate
+        if [ -s /run/nginx.pid ]; then
+            /usr/sbin/nginx -s reopen > /dev/null 2>&1 || true
+        fi
+    endscript
+}
+
+
