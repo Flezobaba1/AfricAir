@@ -119,7 +119,7 @@ API_CHECKSUM="${API_ARTIFACT}.sha256"
 
 if ! (
   cd "${WORKTREE}"
-  pnpm --filter @africair/api deploy --prod "${API_STAGE}"
+  pnpm --filter @africair/api deploy --prod --legacy "${API_STAGE}"
   rm -rf "${API_STAGE}/migrations"
   cp -a server/migrations "${API_STAGE}/migrations"
   [[ -f "${API_STAGE}/dist/index.js" ]]
