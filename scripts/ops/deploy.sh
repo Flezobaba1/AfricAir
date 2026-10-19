@@ -11,7 +11,9 @@ if [[ "$#" -ne 1 ]]; then
   echo "Usage: $0 <artifact.tar.gz>" >&2
   exit 2
 fi
-
+if [[ "$(basename "$1")" == africair-api-*.tar.gz ]]; then
+  exec "$(dirname "$0")/deploy-api.sh" "$@"
+fi
 APP_ROOT="/opt/africair"
 RELEASES="${APP_ROOT}/releases"
 CURRENT="${APP_ROOT}/current"
@@ -54,7 +56,6 @@ EXPECTED_COMMIT="$(jq -er '.commit' "${INCOMING}/version.json")"
 mv "${INCOMING}" "${RELEASE_DIR}"
 INCOMING=""
 chown -R africair:africair "${RELEASE_DIR}"
-chmod -R a+rX "${RELEASE_DIR}"
 chmod -R a+rX "${RELEASE_DIR}"
 
 PREVIOUS_DIR="$(readlink -f "${CURRENT}")"
