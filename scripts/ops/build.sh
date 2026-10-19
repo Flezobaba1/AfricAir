@@ -80,6 +80,7 @@ fi
 if ! (
   cd "${WORKTREE}"
   pnpm build
+  pnpm build:api
 ); then
   echo "ERROR: front-end build failed." >&2
   exit 40
@@ -112,9 +113,30 @@ if ! tar -C "${WORKTREE}/dist" -czf "${ARTIFACT}" . ||
   echo "ERROR: artifact packaging failed." >&2
   exit 40
 fi
+API_STAGE="${TEMP_DIR}/api-package"
+API_ARTIFACT="${ARTIFACT_DIR}/africair-api-${SHORT_SHA}.tar.gz"
+API_CHECKSUM="${API_ARTIFACT}.sha256"
 
+if ! (
+  cd "${WORKTREE}"
+  pnpm --filter @africair/api deploy --prod "${API_STAGE}"
+  rm -rf "${API_STAGE}/migrations"
+  cp -a server/migrations "${API_STAGE}/migrations"
+  [[ -f "${API_STAGE}/dist/index.js" ]]
+  [[ -d "${API_STAGE}/node_modules" ]]
+); then
+  echo "ERROR: API packaging failed." >&2
+  exit 40
+fi
+
+if ! tar -C "${API_STAGE}" -czf "${API_ARTIFACT}" . ||
+  ! (cd "${ARTIFACT_DIR}" && sha256sum "$(basename "${API_ARTIFACT}")" > "$(basename "${API_CHECKSUM}")"); then
+  echo "ERROR: API artifact creation failed." >&2
+  exit 40
+fi
 echo "Build complete"
 echo "Artifact: ${ARTIFACT}"
 echo "Checksum: ${CHECKSUM}"
-
+echo "API artifact: ${API_ARTIFACT}"
+echo "API checksum: ${API_CHECKSUM}"
 
