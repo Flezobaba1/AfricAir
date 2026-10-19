@@ -97,13 +97,13 @@ if [[ "${SERVED_COMMIT}" != "${EXPECTED_COMMIT}" ]]; then
   rollback_deploy
   exit 1
 fi
-
 mapfile -t OLD_RELEASES < <(
   find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
     sort -rn |
     tail -n +6 |
     cut -d' ' -f2-
-)
+) || true
+
 
 for old_release in "${OLD_RELEASES[@]}"; do
   rm -rf -- "${old_release}"
