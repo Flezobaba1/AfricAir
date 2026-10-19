@@ -1,0 +1,29 @@
+[Unit]
+Description=AfricAir API
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=africair
+Group=africair
+WorkingDirectory=/opt/africair/api/current
+EnvironmentFile=/etc/africair/api.env
+Environment="ADMIN_TOKEN_FILE=%d/admin_token"
+Environment="PROMO_CODES_FILE=%d/promo_codes"
+Environment="DATABASE_URL_FILE=%d/database_url"
+LoadCredential=admin_token:/etc/africair/secrets/admin_token
+LoadCredential=promo_codes:/etc/africair/secrets/promo_codes
+LoadCredential=database_url:/etc/africair/secrets/database_url
+ExecStart=/usr/bin/node /opt/africair/api/current/dist/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20s
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

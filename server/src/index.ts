@@ -41,11 +41,11 @@ const metricsServer = createServer(async (req, res) => {
 
 async function start() {
   if (store && settings.migrateOnStart) await migrate(secrets.databaseUrl.value, settings, (msg) => log('info', msg))
-  server.listen(settings.port, () => log('info', 'api listening', {
+server.listen(settings.port, '127.0.0.1', () => log('info', 'api listening', { 
     port: settings.port, metricsPort: settings.metricsPort, appEnv: settings.appEnv, version: settings.version,
     database: store ? 'configured' : 'not-configured', adminToken: secrets.adminToken().source, promoCodes: secrets.promoCodes().source,
   }))
-  metricsServer.listen(settings.metricsPort)
+  metricsServer.listen(settings.metricsPort, '127.0.0.1')
 }
 
 // Graceful shutdown: fail readiness first so the load balancer stops sending traffic, then drain.
