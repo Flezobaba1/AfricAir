@@ -35,7 +35,10 @@ RELEASE_DIR="${RELEASES}/${RELEASE_NAME}"
 INCOMING="$(mktemp -d "${RELEASES}/.incoming.XXXXXX")"
 
 cleanup() {
-  [[ -d "${INCOMING:-}" ]] && rm -rf -- "${INCOMING}"
+  if [[ -d "${INCOMING:-}" ]]; then
+    rm -rf -- "${INCOMING}"
+  fi
+  return 0
 }
 trap cleanup EXIT
 
@@ -105,27 +108,4 @@ find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
     [[ -n "${old_release}" ]] || continue
     rm -rf -- "${old_release}"
   done
-echo "Deployment complete: ${RELEASE_NAME}"  exit 1
-fi
-
-SERVED_COMMIT="$(curl --fail --silent --show-error --max-time 5 http://127.0.0.1/version.json | jq -er '.commit')" || {
-  rollback_deploy
-  exit 1
-}
-
-if [[ "${SERVED_COMMIT}" != "${EXPECTED_COMMIT}" ]]; then
-  echo "ERROR: served commit does not match deployed commit." >&2
-  rollback_deploy
-  exit 1
-fi
-find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
-  sort -rn |
-  tail -n +6 |
-  cut -d' ' -f2- |
-  while IFS= read -r old_release; do
-    [[ -n "${old_release}" ]] || continue
-    rm -rf -- "${old_release}"
-  done
 echo "Deployment complete: ${RELEASE_NAME}"
-
-
