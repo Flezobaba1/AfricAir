@@ -97,15 +97,35 @@ if [[ "${SERVED_COMMIT}" != "${EXPECTED_COMMIT}" ]]; then
   rollback_deploy
   exit 1
 fi
-mapfile -t OLD_RELEASES < <(
-  find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
-    sort -rn |
-    tail -n +6 |
-    cut -d' ' -f2-
-) || true
+find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
+  sort -rn |
+  tail -n +6 |
+  cut -d' ' -f2- |
+  while IFS= read -r old_release; do
+    [[ -n "${old_release}" ]] || continue
+    rm -rf -- "${old_release}"
+  done
+echo "Deployment complete: ${RELEASE_NAME}"  exit 1
+fi
 
+SERVED_COMMIT="$(curl --fail --silent --show-error --max-time 5 http://127.0.0.1/version.json | jq -er '.commit')" || {
+  rollback_deploy
+  exit 1
+}
 
-for old_release in "${OLD_RELEASES[@]}"; do
-  rm -rf -- "${old_release}"
-done
+if [[ "${SERVED_COMMIT}" != "${EXPECTED_COMMIT}" ]]; then
+  echo "ERROR: served commit does not match deployed commit." >&2
+  rollback_deploy
+  exit 1
+fi
+find "${RELEASES}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
+  sort -rn |
+  tail -n +6 |
+  cut -d' ' -f2- |
+  while IFS= read -r old_release; do
+    [[ -n "${old_release}" ]] || continue
+    rm -rf -- "${old_release}"
+  done
+echo "Deployment complete: ${RELEASE_NAME}"
+
 
